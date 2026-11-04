@@ -2,6 +2,8 @@
 
 From the pstack-tabnine checkout, run `@@PYTHON_COMMAND@@ integrate.py install`. On Windows, use `python` if the `py` launcher is unavailable. The default destination is Tabnine's `~/.tabnine/opencode/config` (`%USERPROFILE%\.tabnine\opencode\config` on Windows); use `--config-dir` for another root or `--client opencode` for standalone OpenCode. Restart the host after installation.
 
+Start with the host CLI, Git, and Python 3.10+; Git Bash supplies Bash on Windows. Add other tools only when a selected workflow needs them, following the harness adapter's **Workflow dependencies** guidance.
+
 ## Pick models
 
 Run `/pstack-setup-pstack`. It discovers the host's available models, asks for a reasoning budget and role choices, validates them, and updates `@@CONFIG_DIR@@/pstack/models.json` and the named role agents. Restart the host to reload them.

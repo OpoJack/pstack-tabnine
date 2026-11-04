@@ -8,12 +8,16 @@ pstack is a collection of agent instructions and helper scripts, rather than an 
 
 ## Install
 
-Requires Python 3.10+ and internet access to GitHub for the pinned upstream download. Run from this checkout:
+Start with **Tabnine CLI, Git, and Python 3.10+**.
+
+Run from this checkout in Git Bash:
 
 ```sh
-python3 integrate.py install --dry-run
-python3 integrate.py install
+py -3 integrate.py install --dry-run
+py -3 integrate.py install
 ```
+
+Use `python` instead of `py -3` if the Python launcher is unavailable.
 
 Restart Tabnine CLI, then use:
 
@@ -31,9 +35,9 @@ Tabnine's current [configuration documentation](https://docs.tabnine.com/main/ge
 For a different config root or OpenCode:
 
 ```sh
-python3 integrate.py install --config-dir /path/to/config
-python3 integrate.py install --client opencode
-python3 integrate.py install --client opencode --config-dir /path/to/project/.opencode
+py -3 integrate.py install --config-dir 'C:/path/to/config'
+py -3 integrate.py install --client opencode
+py -3 integrate.py install --client opencode --config-dir 'C:/path/to/project/.opencode'
 ```
 
 OpenCode's global destination defaults to `$XDG_CONFIG_HOME/opencode`, or `~/.config/opencode`. The installer writes namespaced skill entries, commands, agents, and its own `pstack/` directory containing the full upstream resource trees. Native skill IDs and commands use `pstack-<name>` so they do not shadow unrelated skills such as `how` or `tdd`. It preserves existing host configuration and permissions.
@@ -63,7 +67,7 @@ Choose models around the work you expect to do:
 For manual configuration, copy [examples/models.json](examples/models.json) to a separate input file, edit the role choices, then run:
 
 ```sh
-python3 integrate.py configure --models /path/to/my-models.json
+py -3 integrate.py configure --models 'C:/path/to/my-models.json'
 ```
 
 Roles accept a `provider/model` string or an object such as `{"model": "provider/model", "variant": "high"}`. Panels accept lists; omitted roles inherit the session model. The script validates the file's structure, so check model access and supported variants in your CLI before applying it. Restart afterward.
@@ -72,20 +76,12 @@ Roles accept a `provider/model` string or an object such as `{"model": "provider
 
 [upstream.lock.json](upstream.lock.json) pins pstack **0.15.36**, its commit, and archive checksum. Re-running installation keeps that version. Upgrades require updating the lock and inventory after auditing upstream changes.
 
-To install from an offline or modified source tree with the expected skill inventory:
-
-```sh
-python3 integrate.py install --source /path/to/cursor-plugins/pstack
-```
-
 Check installed files or remove the integration with:
 
 ```sh
-python3 integrate.py doctor
-python3 integrate.py uninstall --dry-run
-python3 integrate.py uninstall
+py -3 integrate.py doctor
+py -3 integrate.py uninstall --dry-run
+py -3 integrate.py uninstall
 ```
 
 Install and uninstall protect local edits and unrelated files. Use `--force` to back up conflicting files under `pstack-backups/<timestamp>/` before replacing or removing them. `doctor` checks file integrity and optional executables; it does not verify credentials or live workflows.
-
-Workflow helpers may need additional tools: Git, `gh`, `jq`, `rg`, Bash, Bun for PR watching, or Java/TLC for model checking. See each bundled skill for its requirements; the installer does not install these dependencies.

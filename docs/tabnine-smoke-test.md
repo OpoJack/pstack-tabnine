@@ -35,25 +35,6 @@ All 13 subprocess checks passed. The [JSON evidence](tabnine-smoke-test.json) re
 
 The smoke runner removed its disposable installation after recording the report. A separate initial manual run also passed the discovery checks.
 
-## Reproduce
-
-From this checkout on macOS:
-
-```sh
-python3 scripts/smoke_tabnine.py --report /tmp/tabnine-smoke-test.json
-```
-
-The runner downloads the pinned official release. To reuse an existing matching download and retain diagnostics:
-
-```sh
-python3 scripts/smoke_tabnine.py \
-  --installer /path/to/tabnine-opencode-1.2.0-darwin-arm64.run \
-  --report /tmp/tabnine-smoke-test.json \
-  --keep
-```
-
-The runner supports pinned macOS ARM64 and x64 installer assets; only ARM64 was executed for this report. It fails if an installer checksum, diagnostic exit code, inventory, resource pointer, agent mode, or preservation check differs.
-
 ## What this establishes
 
 The official Tabnine installation can discover and resolve this integration without authentication. Model entitlement, authenticated tool execution, actual subagent model routing, and behavior across conversational turns were outside the test scope.

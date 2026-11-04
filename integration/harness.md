@@ -23,13 +23,19 @@ A named reviewer agent is general-purpose and can edit files. Give review-only b
 
 Task agents share the host's working directory. For competing writers, prepare distinct worktrees using the host's isolation feature if available. A worktree path in a prompt alone does not bind the task's tools to that directory. If the host cannot bind a worker's cwd, run a separate CLI process in the worktree, or serialize writers and review each diff. Never claim worktree isolation while workers share a checkout.
 
+## Workflow dependencies
+
+Start local work with the host CLI, Git, and Python 3.10+. Check extra executables only when the selected workflow reaches a step that uses them. Prefer the host's read/search tools or `git grep` for repository exploration and Python's standard library for JSON processing when they provide equivalent results. Git Bash supplies Bash and common Unix utilities on Windows; `gh`, `jq`, and `rg` are separate tools whose availability must be checked.
+
+PR operations need an authenticated forge CLI or an available equivalent integration. The bundled PR watcher specifically needs Bun and `gh`; the multi-phase plan validator needs Node; Statechart needs a supported JavaScript runtime and its Java/TLC toolchain. Run helpers with their actual dependencies. If an equivalent cannot preserve a required check, report that step's missing dependency and continue independent work. Claim verification only from checks that ran. Missing optional executables in `doctor` are informational; its exit status checks managed-file integrity.
+
 ## Windows execution
 
 Use the host's actual shell. Paths in this adapter use forward slashes, including Windows drive paths, so Markdown links and prompts keep their separators. Quote paths containing spaces. Python is `py -3` on a standard Windows installation, or `python` when the Python launcher is unavailable.
 
 Run the bundled `.sh` helpers through Bash, for example `bash '<skill-directory>/scripts/worktree-audit.sh' ...` and `bash '<skill-directory>/scripts/log.sh' ...`. Git Bash or a separately configured WSL environment supplies the Unix tools those helpers use; execute Git operations in the same environment as the working tree. For the TypeScript entry points, invoke the runtime explicitly: `bun '<poteto-mode-directory>/scripts/watch-pr/watch-pr' ...` or `bun '<statechart-directory>/scripts/statechart.ts' ...`. Node and Deno alternatives remain in the Statechart skill. Windows does not execute Unix shebang launchers directly.
 
-Use platform-appropriate equivalents for process, performance, and disk inspection. Xcode and iOS simulator cleanup applies only on macOS; skip those steps on Windows with a reason. Missing Bash, runtimes, or native app drivers are dependencies to resolve, not successful verification.
+Use Windows-compatible tools for process, performance, and disk inspection. Skip upstream cleanup steps for unsupported platforms. Missing Bash, runtimes, or native app drivers are dependencies to resolve, not successful verification.
 
 ## Models
 
