@@ -45,7 +45,7 @@ Use Windows-compatible tools for process, performance, and disk inspection. Skip
 
 @@ROLE_TABLE@@
 
-`/pstack-setup-pstack` configures roles. After a change, restart the host to reload agents. For a persistent poteto-mode session, select the primary agent `pstack`. A slash command applies to its invocation; it is not Cursor's Custom Modes UI.
+`/pstack-setup-pstack` configures roles. After a change, restart the host to reload agents. For a persistent poteto-mode session, select the primary agent `poteto`. A slash command applies to its invocation; it is not Cursor's Custom Modes UI.
 
 ## Portable replacements
 

@@ -4,7 +4,7 @@
 
 Install [pstack](https://github.com/cursor/plugins/tree/main/pstack)'s engineering workflows into Tabnine's OpenCode-based CLI. The installer defaults to `~/.tabnine/opencode/config` and supports standalone OpenCode as well.
 
-pstack is a collection of agent instructions and helper scripts, rather than an MCP server. This integration installs **57 skills**, matching slash commands, two adapted delegate prompts, configurable role agents, and a persistent `pstack` primary agent. Cursor Automations and the `make-bot-ui` skill are excluded.
+pstack is a collection of agent instructions and helper scripts, rather than an MCP server. This integration installs **57 skills**, matching slash commands, two adapted delegate prompts, configurable role agents, and a persistent `poteto` primary agent. Cursor Automations and the `make-bot-ui` skill are excluded.
 
 ## Install
 
@@ -28,7 +28,7 @@ Restart Tabnine CLI, then use:
 /pstack-interrogate review <change>
 ```
 
-Select the **pstack** primary agent to keep the engineering workflow active across tasks. Slash commands load a workflow for an invocation; persistent mode uses the host's agent selector.
+Select the **Poteto** primary agent to keep the engineering workflow active across tasks. Slash commands load a workflow for an invocation; persistent mode uses the host's agent selector.
 
 Tabnine's current [configuration documentation](https://docs.tabnine.com/main/getting-started/tabnine-plugin-for-opencode/sign-in-and-models.md) identifies `~/.tabnine/opencode/config` inside its `~/.tabnine` home. Its [migration helper](https://github.com/codota/tabnine-opencode-public/blob/2bdafbd14e36a681074b27a3eb7f1a05d2e30940/migration_helper/README.md) confirms additive OpenCode discovery of `skills/`, `commands/`, and `agents/`. Discovery has been verified with the **official Tabnine 1.2.0 installation, bundled OpenCode 1.19.5**, on macOS ARM64, with the Tabnine plugin enabled, network blocked, and no authentication or prompts. All 57 commands, 57 skills, and 24 agent definitions were accessible; see the [smoke-test report](docs/tabnine-smoke-test.md). Standalone OpenCode 1.18.10 discovery also passed. Child model routing and persistent behavior during actual conversations remain unverified. Older `tabnine-legacy` configuration is outside this integration's scope.
 
@@ -48,7 +48,7 @@ The engineering workflows and bundled resources carry over through the [host ada
 
 - **Cursor-only features:** Automations, routines, webhook wakes, secret-request cards, `make-bot-ui`, and automation bot templates are excluded. Bugbot setup and required bot runs are replaced by ordinary PR review.
 - **Cloud and background execution:** workers run locally. Durable scheduling, remote machines, and work after the CLI exits require separate host support.
-- **Cursor model rules and Custom Modes:** role models are configured locally, and the **pstack** primary agent provides persistent mode.
+- **Cursor model rules and Custom Modes:** role models are configured locally, and the **Poteto** primary agent provides persistent mode.
 - **History and external tools:** transcript-based workflows need explicit session exports. MCP providers, credentials, GitHub access, and app drivers must be configured separately.
 
 ## Models

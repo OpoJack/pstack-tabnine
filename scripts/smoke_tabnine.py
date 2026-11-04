@@ -112,7 +112,7 @@ def smoke(sandbox, installer, arch):
     loaded_commands = {name for name in config["command"] if name.startswith("pstack-")}
     loaded_skills = {skill["name"] for skill in skills if skill["name"].startswith("pstack-")}
     expected_agents = {Path(name).stem for name in manifest["files"] if name.startswith("agents/")}
-    loaded_agents = {name for name in config["agent"] if name.startswith("pstack")}
+    loaded_agents = {name for name in config["agent"] if name == "poteto" or name.startswith("pstack")}
     require(loaded_commands == expected, "Command catalogue does not match the installed skills")
     require(loaded_skills == expected, "Skill catalogue does not match the installed skills")
     require(loaded_agents == expected_agents, "Agent catalogue does not match installed definitions")
@@ -121,8 +121,8 @@ def smoke(sandbox, installer, arch):
     require(config["enabled_providers"] == ["tabnine"], "Tabnine provider configuration changed")
     require(config["plugin"] == [[f"file://{home}/.tabnine/opencode/plugin", {"host": "https://sandbox.invalid"}]], "Official Tabnine plugin is not enabled")
     mode = config["command"]["pstack-poteto-mode"]
-    require(mode["agent"] == "pstack" and mode["subtask"] is False, "poteto-mode does not select the primary coordinator")
-    for name, expected_mode in (("pstack", "primary"), ("pstack-poteto-agent", "subagent"), ("pstack-how-explorer-1", "subagent")):
+    require(mode["agent"] == "poteto" and mode["subtask"] is False, "poteto-mode does not select the primary coordinator")
+    for name, expected_mode in (("poteto", "primary"), ("pstack-poteto-agent", "subagent"), ("pstack-how-explorer-1", "subagent")):
         agent = json.loads(run(f"resolve-{name}", [launcher, "debug", "agent", name]))
         require(agent["mode"] == expected_mode, f"Incorrect agent mode for {name}")
         require(str(config_dir / "pstack/harness.md") in agent["prompt"], f"Missing adapter in {name}")

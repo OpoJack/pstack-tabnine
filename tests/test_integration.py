@@ -66,7 +66,9 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(len(list((self.config / "skills").glob("*/SKILL.md"))), 57)
         self.assertEqual(len(list((self.config / "commands").glob("*.md"))), 57)
         self.assertFalse((self.config / "skills/pstack-make-bot-ui").exists())
-        self.assertTrue((self.config / "agents/pstack.md").exists())
+        self.assertTrue((self.config / "agents/poteto.md").exists())
+        self.assertFalse((self.config / "agents/pstack.md").exists())
+        self.assertIn('agent: "poteto"', (self.config / "commands/pstack-poteto-mode.md").read_text(encoding="utf-8"))
         self.assertTrue((self.config / "pstack/LICENSE").exists())
         self.assertEqual((self.config / "pstack/skills/how/references/example.md").read_text(encoding="utf-8").splitlines()[-1], "Reference evidence.")
         command = (self.config / "commands/pstack-how.md").read_text(encoding="utf-8")
@@ -222,7 +224,7 @@ class IntegrationTests(unittest.TestCase):
     def test_real_tabnine_discovers_generated_commands_skills_and_agents(self):
         self.run_cli()
         env = {**os.environ, "OPENCODE_CONFIG_DIR": str(self.config)}
-        for command in (["debug", "config"], ["debug", "skill"], ["debug", "agent", "pstack"]):
+        for command in (["debug", "config"], ["debug", "skill"], ["debug", "agent", "poteto"]):
             # Some Bun CLI versions exit before fully flushing a large piped stdout.
             with tempfile.TemporaryFile(mode="w+", encoding="utf-8") as output:
                 result = subprocess.run(["tabnine", *command], env=env, stdout=output, stderr=subprocess.PIPE, encoding="utf-8", timeout=30)
@@ -231,7 +233,7 @@ class IntegrationTests(unittest.TestCase):
                 data = json.load(output)
             if command == ["debug", "config"]:
                 self.assertIn("pstack-how", data["command"])
-                self.assertEqual(data["agent"]["pstack"]["mode"], "primary")
+                self.assertEqual(data["agent"]["poteto"]["mode"], "primary")
             elif command == ["debug", "skill"]:
                 local = [skill for skill in data if Path(skill["location"]).resolve().is_relative_to(self.config / "skills")]
                 self.assertEqual(len(local), 57)

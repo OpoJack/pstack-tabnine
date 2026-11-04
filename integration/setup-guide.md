@@ -24,6 +24,6 @@ It also offers `/pstack-create-formal-verification-skill` when a costly failure 
 /pstack-poteto-mode add a --json flag to this command. text output stays byte-identical. verify both.
 ```
 
-This command selects the `pstack` primary coordinator. It matches a playbook, lists the steps, delegates where useful, and verifies the result. Follow up normally. Select another primary agent to leave the persistent engineering workflow.
+This command selects the `poteto` primary coordinator. It matches a playbook, lists the steps, delegates where useful, and verifies the result. Follow up normally. Select another primary agent to leave the persistent engineering workflow.
 
 Read [the harness adapter](../../harness.md) for tool mappings, optional dependencies, history exports, and excluded Cursor services. Continue with [routing work](02-poteto-mode.md).

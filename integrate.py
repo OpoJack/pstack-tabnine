@@ -196,7 +196,7 @@ def adapt_text(text, relative, config_dir, client, skill_names=()):
         text = re.sub(r"^pstack is built for Cursor,.*?$", "This installation supports Tabnine CLI and OpenCode through the local harness adapter. Human commands use the `/pstack-` prefix; models are configured through named role agents.", text, flags=re.M)
         text = re.sub(r"^Other tools can read the skills,.*?$", "Durable wakeups and remote machines require a separately configured host capability. The adapter records the available replacements and evidence gaps.", text, flags=re.M)
         text = re.sub(r"Whether `/poteto-mode` stays on.*?(?=\n## Pick a skill)",
-                      "Select the `pstack` primary agent for a persistent engineering workflow. `/pstack-poteto-mode` explicitly selects that coordinator. Other commands use the current primary agent. There is no Cursor Custom Modes keybinding in this integration.\n", text, flags=re.S)
+                      "Select the `poteto` primary agent for a persistent engineering workflow. `/pstack-poteto-mode` explicitly selects that coordinator. Other commands use the current primary agent. There is no Cursor Custom Modes keybinding in this integration.\n", text, flags=re.S)
     text = re.sub(r"^\|[^\n]*make-bot-ui[^\n]*\n", "", text, flags=re.M)
     if relative == "docs/guide/09-make-it-yours.md":
         text = re.sub(r"## Build a bot UI.*?(?=\*\*Pitfall:)", "## Excluded automation integration\n\nCursor's webhook bot UI is excluded. The portable personal-mode and evaluation workflows above remain available.\n\n", text, flags=re.S)
@@ -267,7 +267,7 @@ def build_install(upstream, lock, models, config_dir, client):
             files[f"skills/pstack-{name}/SKILL.md"] = (markdown({"name": f"pstack-{name}", "description": fields["description"]}, command.replace("\n\nUser request: $ARGUMENTS\n", "\n")), 0o644)
             command_fields = {"description": fields["description"]}
             if name == "poteto-mode":
-                command_fields.update({"agent": "pstack", "subtask": False})
+                command_fields.update({"agent": "poteto", "subtask": False})
             files[f"commands/pstack-{name}.md"] = (markdown(command_fields, command), 0o644)
         elif relative.endswith(".md") and "/scripts/" not in relative:
             text = template("setup-guide.md", config_dir) if relative == "docs/guide/01-setup.md" else data.decode()
@@ -289,10 +289,10 @@ def build_install(upstream, lock, models, config_dir, client):
         files[f"agents/pstack-{name}.md"] = (markdown({"description": fields["description"], "mode": "subagent"}, pointer + body), 0o644)
     primary = (pointer + f"Read `{config_dir}/pstack/skills/poteto-mode/SKILL.md` in full. "
                "Apply its engineering workflow to each task throughout this session. You own the playbook and delegates.\n")
-    files["agents/pstack.md"] = (markdown({"description": "Persistent pstack engineering workflow", "mode": "primary"}, primary), 0o644)
+    files["agents/poteto.md"] = (markdown({"description": "Poteto: persistent pstack engineering workflow", "mode": "primary"}, primary), 0o644)
     files["pstack/README.md"] = (("# pstack\n\nThis is the Tabnine/OpenCode adaptation. Read `harness.md` before the guide. "
                                      "Use `/pstack-poteto-help` for routing and `/pstack-poteto-mode` to start a task. "
-                                     "Select the `pstack` primary agent for persistent mode.\n").encode(), 0o644)
+                                     "Select the `poteto` primary agent for persistent mode.\n").encode(), 0o644)
     # Ship a self-contained configure command for /pstack-setup-pstack.
     files["pstack/integration/integrate.py"] = (Path(__file__).read_bytes(), 0o755)
     files["pstack/integration/upstream.lock.json"] = (json_bytes(lock), 0o644)
@@ -449,7 +449,7 @@ def main(argv=None):
     apply_changes(config_dir, files, old, metadata, args.force, args.dry_run, preserve_hashes=preserve_hashes)
     if not args.dry_run:
         print(f"{'Installed' if args.action == 'install' else 'Configured'} {len(metadata['skills'])} pstack skills in {config_dir}")
-        print("Restart the CLI, then use /pstack-poteto-mode or select the pstack primary agent.")
+        print("Restart the CLI, then use /pstack-poteto-mode or select the Poteto primary agent.")
     return 0
 
 
