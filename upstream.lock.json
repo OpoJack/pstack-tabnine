@@ -1,0 +1,10 @@
+{
+  "repository": "https://github.com/cursor/plugins",
+  "commit": "fd268b808c786469e6dd8c8d9db864d0de4d669e",
+  "version": "0.15.36",
+  "archive_sha256": "1294447fd0a985a9158b982a70884eee37b53c5269782f765b6273aa198b4919",
+  "skills": 58,
+  "excluded_skills": {
+    "make-bot-ui": "Requires Cursor Automations, webhook routines, and Cursor secret-request cards."
+  }
+}
