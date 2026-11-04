@@ -6,7 +6,8 @@ import hashlib
 import io
 import json
 import os
-from pathlib import Path, PurePosixPath
+from pathlib import Path, PurePosixPath, PureWindowsPath
+import posixpath
 import re
 import shutil
 import sys
@@ -37,7 +38,7 @@ def json_bytes(value):
 
 
 def read_json(path):
-    return json.loads(path.read_text())
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def frontmatter(text):
@@ -146,10 +147,13 @@ def normalize_models(value):
 
 
 def template(name, config_dir):
-    return (ROOT / "integration" / name).read_text().replace("@@CONFIG_DIR@@", str(config_dir))
+    return ((ROOT / "integration" / name).read_text(encoding="utf-8")
+            .replace("@@CONFIG_DIR@@", config_dir.as_posix())
+            .replace("@@PYTHON_COMMAND@@", "py -3" if os.name == "nt" else "python3"))
 
 
 def role_artifacts(models, config_dir):
+    config_dir = PurePosixPath(config_dir.as_posix())
     files = {}
     rows = []
     for role, seats in models["roles"].items():
@@ -172,6 +176,7 @@ def role_artifacts(models, config_dir):
 
 
 def adapt_text(text, relative, config_dir, client, skill_names=()):
+    config_dir = PurePosixPath(config_dir.as_posix())
     skills = str(config_dir / "skills")
     text = text.replace("~/.cursor/rules/pstack-models.mdc", str(config_dir / "pstack/models.json"))
     text = text.replace("~/.cursor/skills", skills).replace(".cursor/skills", ".opencode/skills")
@@ -203,7 +208,7 @@ def adapt_text(text, relative, config_dir, client, skill_names=()):
         path, separator, anchor = target.partition("#")
         if not PurePosixPath(path).suffix and not path.endswith("/"):
             return match[0]
-        resolved = os.path.normpath(str(PurePosixPath(relative).parent / path))
+        resolved = posixpath.normpath(str(PurePosixPath(relative).parent / path))
         if resolved.startswith("skills/"):
             destination = config_dir / "pstack" / resolved
         elif resolved.startswith("docs/") or resolved == "README.md":
@@ -221,6 +226,7 @@ def adapt_text(text, relative, config_dir, client, skill_names=()):
 
 
 def build_install(upstream, lock, models, config_dir, client):
+    config_dir = PurePosixPath(config_dir.as_posix())
     files = role_artifacts(models, config_dir)
     pointer = f"Read `{config_dir}/pstack/harness.md` before applying this file. Its host mappings replace upstream harness-specific instructions.\n\n"
     found = []
@@ -297,13 +303,13 @@ def build_install(upstream, lock, models, config_dir, client):
 
 def safe_path(config_dir, relative):
     path = PurePosixPath(relative)
-    if path.is_absolute() or ".." in path.parts or not path.parts:
+    if path.is_absolute() or ".." in path.parts or not path.parts or "\\" in relative or ":" in relative or PureWindowsPath(relative).drive:
         raise ValueError(f"Unsafe managed path: {relative}")
     target = config_dir.joinpath(*path.parts)
     for parent in [target, *target.parents]:
         if parent == config_dir:
             break
-        if parent.is_symlink():
+        if parent.is_symlink() or getattr(parent, "is_junction", lambda: False)():
             raise ValueError(f"Refusing managed symlink: {parent}")
     return target
 
@@ -321,14 +327,15 @@ def load_manifest(config_dir):
 
 
 def atomic_write(path, data, mode):
-    if path.is_file() and path.read_bytes() == data and path.stat().st_mode & 0o777 == mode:
+    if path.is_file() and path.read_bytes() == data and (os.name == "nt" or path.stat().st_mode & 0o777 == mode):
         return
     path.parent.mkdir(parents=True, exist_ok=True)
     fd, temporary = tempfile.mkstemp(prefix=".pstack-", dir=path.parent)
     try:
         with os.fdopen(fd, "wb") as stream:
             stream.write(data)
-        os.chmod(temporary, mode)
+        if os.name != "nt":
+            os.chmod(temporary, mode)
         os.replace(temporary, path)
     finally:
         if os.path.exists(temporary):
@@ -364,7 +371,7 @@ def apply_changes(config_dir, files, old, metadata, force=False, dry_run=False, 
         print(f"Backed up {len(conflicts)} conflicting file(s) to {backup}", file=sys.stderr)
     for relative, (data, mode) in sorted(files.items()):
         path = safe_path(config_dir, relative)
-        if not path.exists() or path.read_bytes() != data or path.stat().st_mode & 0o777 != mode:
+        if not path.exists() or path.read_bytes() != data or (os.name != "nt" and path.stat().st_mode & 0o777 != mode):
             atomic_write(path, data, mode)
     for relative in sorted(stale):
         safe_path(config_dir, relative).unlink(missing_ok=True)
@@ -447,6 +454,9 @@ def main(argv=None):
 
 
 if __name__ == "__main__":
+    if os.name == "nt":
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
     try:
         sys.exit(main())
     except (ValueError, OSError, KeyError, tarfile.TarError) as error:

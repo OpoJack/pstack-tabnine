@@ -23,6 +23,14 @@ A named reviewer agent is general-purpose and can edit files. Give review-only b
 
 Task agents share the host's working directory. For competing writers, prepare distinct worktrees using the host's isolation feature if available. A worktree path in a prompt alone does not bind the task's tools to that directory. If the host cannot bind a worker's cwd, run a separate CLI process in the worktree, or serialize writers and review each diff. Never claim worktree isolation while workers share a checkout.
 
+## Windows execution
+
+Use the host's actual shell. Paths in this adapter use forward slashes, including Windows drive paths, so Markdown links and prompts keep their separators. Quote paths containing spaces. Python is `py -3` on a standard Windows installation, or `python` when the Python launcher is unavailable.
+
+Run the bundled `.sh` helpers through Bash, for example `bash '<skill-directory>/scripts/worktree-audit.sh' ...` and `bash '<skill-directory>/scripts/log.sh' ...`. Git Bash or a separately configured WSL environment supplies the Unix tools those helpers use; execute Git operations in the same environment as the working tree. For the TypeScript entry points, invoke the runtime explicitly: `bun '<poteto-mode-directory>/scripts/watch-pr/watch-pr' ...` or `bun '<statechart-directory>/scripts/statechart.ts' ...`. Node and Deno alternatives remain in the Statechart skill. Windows does not execute Unix shebang launchers directly.
+
+Use platform-appropriate equivalents for process, performance, and disk inspection. Xcode and iOS simulator cleanup applies only on macOS; skip those steps on Windows with a reason. Missing Bash, runtimes, or native app drivers are dependencies to resolve, not successful verification.
+
 ## Models
 
 `@@CONFIG_DIR@@/pstack/models.json` owns role choices. The generated agent files implement them. Read this table instead of upstream model-rule lines, fallback slugs, or effort ladders. Default agents inherit the session model. Two independent seats on one model are not a multi-model review. Report reduced diversity; skip Arena's cross-family judge unless its configured model family differs from the parent's. Determine family from actual model identity, such as Claude or GPT; all Tabnine models share the `tabnine/` provider prefix. The cross-judge pool is an ordered choice for one judge, not a fan-out panel. A rejected configured model is a visible configuration error: fix the role choice with the user instead of silently substituting a vendor model. Only use variants the configured provider actually supports.

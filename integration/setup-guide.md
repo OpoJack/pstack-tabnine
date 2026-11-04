@@ -1,6 +1,6 @@
 # Set up pstack
 
-From the pstack-tabnine checkout, run `python3 integrate.py install`. The default destination is Tabnine's `~/.tabnine/opencode/config`; use `--config-dir` for another root or `--client opencode` for standalone OpenCode. Restart the host after installation.
+From the pstack-tabnine checkout, run `@@PYTHON_COMMAND@@ integrate.py install`. On Windows, use `python` if the `py` launcher is unavailable. The default destination is Tabnine's `~/.tabnine/opencode/config` (`%USERPROFILE%\.tabnine\opencode\config` on Windows); use `--config-dir` for another root or `--client opencode` for standalone OpenCode. Restart the host after installation.
 
 ## Pick models
 

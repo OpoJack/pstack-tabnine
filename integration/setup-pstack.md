@@ -12,8 +12,8 @@ Read `@@CONFIG_DIR@@/pstack/harness.md`, including the role table, before changi
 3. Write the chosen configuration to a temporary JSON file, then run the following through the shell with correctly quoted paths. The configure command validates the file and updates managed agents and the harness without downloading upstream. Resolve the actual CLI executable for model discovery separately; this command is Python.
 
    ```sh
-   python3 '@@CONFIG_DIR@@/pstack/integration/integrate.py' configure --config-dir '@@CONFIG_DIR@@' --models '<temporary-json-file>'
+   @@PYTHON_COMMAND@@ '@@CONFIG_DIR@@/pstack/integration/integrate.py' configure --config-dir '@@CONFIG_DIR@@' --models '<temporary-json-file>'
    ```
 
-4. Confirm the updated role table and the exact files changed. Tell the user to restart the host to reload agent definitions. If configuration fails due to an edited managed file, show the conflict and preserve the edit; `--force` backs up conflicts before replacing them.
+4. Confirm the updated role table and the exact files changed. On Windows, use `python` if the `py` launcher is unavailable. Tell the user to restart the host to reload agent definitions. If configuration fails due to an edited managed file, show the conflict and preserve the edit; `--force` backs up conflicts before replacing them.
 5. If the project has no real-app verification harness, offer `create-verification-skill`. If it lacks formal verification for a property worth proving, offer `create-formal-verification-skill`. These offers are optional and do not block setup.

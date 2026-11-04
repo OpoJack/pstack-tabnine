@@ -26,7 +26,7 @@ Restart Tabnine CLI, then use:
 
 Select the **pstack** primary agent to keep the engineering workflow active across tasks. Slash commands load a workflow for an invocation; persistent mode uses the host's agent selector.
 
-Tabnine's current [configuration documentation](https://docs.tabnine.com/main/getting-started/tabnine-plugin-for-opencode/sign-in-and-models.md) identifies `~/.tabnine/opencode/config` inside its `~/.tabnine` home. Its [migration helper](https://github.com/codota/tabnine-opencode-public/blob/2bdafbd14e36a681074b27a3eb7f1a05d2e30940/migration_helper/README.md) confirms additive OpenCode discovery of `skills/`, `commands/`, and `agents/`. The public Tabnine 1.2.0 bundle uses OpenCode 1.19.5; this integration has been checked with the available **OpenCode 1.18.10** CLI. Tabnine runtime discovery, child model routing, and persistent behavior still need verification on an authenticated Tabnine installation. No Tabnine executable was available during development. Older `tabnine-legacy` configuration is outside this integration's scope.
+Tabnine's current [configuration documentation](https://docs.tabnine.com/main/getting-started/tabnine-plugin-for-opencode/sign-in-and-models.md) identifies `~/.tabnine/opencode/config` inside its `~/.tabnine` home. Its [migration helper](https://github.com/codota/tabnine-opencode-public/blob/2bdafbd14e36a681074b27a3eb7f1a05d2e30940/migration_helper/README.md) confirms additive OpenCode discovery of `skills/`, `commands/`, and `agents/`. Discovery has been verified with the **official Tabnine 1.2.0 installation, bundled OpenCode 1.19.5**, on macOS ARM64, with the Tabnine plugin enabled, network blocked, and no authentication or prompts. All 57 commands, 57 skills, and 24 agent definitions were accessible; see the [smoke-test report](docs/tabnine-smoke-test.md). Standalone OpenCode 1.18.10 discovery also passed. Child model routing and persistent behavior during actual conversations remain unverified. Older `tabnine-legacy` configuration is outside this integration's scope.
 
 For a different config root or OpenCode:
 
@@ -37,6 +37,22 @@ python3 integrate.py install --client opencode --config-dir /path/to/project/.op
 ```
 
 OpenCode's global destination defaults to `$XDG_CONFIG_HOME/opencode`, or `~/.config/opencode`. The installer writes namespaced skill entries, commands, agents, and its own `pstack/` directory containing the full upstream resource trees. Native skill IDs and commands use `pstack-<name>` so they do not shadow unrelated skills such as `how` or `tdd`. It preserves existing host configuration and permissions.
+
+## Windows
+
+Windows is the deployment target. Install Python 3.10+ and run these commands from PowerShell in this checkout:
+
+```powershell
+py -3 integrate.py install --dry-run
+py -3 integrate.py install
+py -3 integrate.py doctor
+```
+
+Use `python` instead of `py -3` if the Python launcher is unavailable. The default destination is `%USERPROFILE%\.tabnine\opencode\config`, matching the [official Windows installation layout](https://docs.tabnine.com/main/getting-started/tabnine-plugin-for-opencode/install.md). Restart Tabnine afterward and use the same `/pstack-...` commands.
+
+The installer uses UTF-8, emits forward-slash paths in prompts and Markdown links, and avoids relying on Unix execute permissions on Windows. Tests cover Windows drive paths and install roots with spaces and non-ASCII characters. The official Tabnine discovery smoke test has **only run on macOS ARM64**; native Windows discovery remains unverified, and `scripts/smoke_tabnine.py` is a macOS-only test runner.
+
+Prompt-only workflows need no Unix shell. The bundled `.sh` helpers require Bash and their Unix utilities, such as Git Bash from Git for Windows; invoke them as `bash <script> ...`. WSL is a separate environment: keep its runtime, paths, and working tree consistent. For the PR watcher, use `bun <poteto-mode-directory>/scripts/watch-pr/watch-pr ...`. For Statechart, use `bun <statechart-directory>/scripts/statechart.ts ...`, plus Java/TLC. Windows does not run Unix shebang launchers directly. Xcode and iOS simulator steps are macOS-specific and are skipped on Windows.
 
 ## What carries over
 
@@ -115,5 +131,13 @@ python3 -m unittest discover -s tests -v
 ```
 
 Tests cover installation, resource paths, executable scripts, checksum and path validation, model configuration, conflict backups, idempotence, and safe removal. If OpenCode is installed, a discovery test checks generated commands, skills, and agents through the real CLI without making a model request.
+
+To repeat the official Tabnine discovery test on macOS:
+
+```sh
+python3 scripts/smoke_tabnine.py --report /tmp/tabnine-smoke-test.json
+```
+
+The smoke runner downloads a checksum-pinned official installer, stages the pinned pstack source, and runs the installer and CLI diagnostics in a disposable home under macOS `sandbox-exec`. Network and real-home reads are denied for child processes; writes are limited to the sandbox and native `mktemp` files. Login and shell-profile changes are disabled. The Tabnine plugin stays enabled. No prompt or model request runs. The sandbox is removed afterward; use `--keep` to retain the installation and raw logs, or `--installer /path/to/official.run` to reuse the pinned download.
 
 The upstream capability audit and primary-source references live in [docs/research.md](docs/research.md).
