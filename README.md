@@ -38,81 +38,47 @@ python3 integrate.py install --client opencode --config-dir /path/to/project/.op
 
 OpenCode's global destination defaults to `$XDG_CONFIG_HOME/opencode`, or `~/.config/opencode`. The installer writes namespaced skill entries, commands, agents, and its own `pstack/` directory containing the full upstream resource trees. Native skill IDs and commands use `pstack-<name>` so they do not shadow unrelated skills such as `how` or `tdd`. It preserves existing host configuration and permissions.
 
-## Windows
+## What doesn't carry over
 
-Windows is the deployment target. Install Python 3.10+ and run these commands from PowerShell in this checkout:
+The engineering workflows and bundled resources carry over through the [host adapter](integration/harness.md). The main exceptions are:
 
-```powershell
-py -3 integrate.py install --dry-run
-py -3 integrate.py install
-py -3 integrate.py doctor
-```
-
-Use `python` instead of `py -3` if the Python launcher is unavailable. The default destination is `%USERPROFILE%\.tabnine\opencode\config`, matching the [official Windows installation layout](https://docs.tabnine.com/main/getting-started/tabnine-plugin-for-opencode/install.md). Restart Tabnine afterward and use the same `/pstack-...` commands.
-
-The installer uses UTF-8, emits forward-slash paths in prompts and Markdown links, and avoids relying on Unix execute permissions on Windows. Tests cover Windows drive paths and install roots with spaces and non-ASCII characters. The official Tabnine discovery smoke test has **only run on macOS ARM64**; native Windows discovery remains unverified, and `scripts/smoke_tabnine.py` is a macOS-only test runner.
-
-Prompt-only workflows need no Unix shell. The bundled `.sh` helpers require Bash and their Unix utilities, such as Git Bash from Git for Windows; invoke them as `bash <script> ...`. WSL is a separate environment: keep its runtime, paths, and working tree consistent. For the PR watcher, use `bun <poteto-mode-directory>/scripts/watch-pr/watch-pr ...`. For Statechart, use `bun <statechart-directory>/scripts/statechart.ts ...`, plus Java/TLC. Windows does not run Unix shebang launchers directly. Xcode and iOS simulator steps are macOS-specific and are skipped on Windows.
-
-## What carries over
-
-- Engineering workflows: poteto-mode and its 23 playbooks, architecture exploration, Arena candidate comparisons, Swarm coverage, adversarial review, TDD, code cleanup, TypeScript guidance, and 24 engineering principles.
-- Research and communication: how, why, teach, recall, reflect, correct, automate-me, prompt sharpening, progress summaries, technical writing, and decision trails.
-- Verification and shipping: app verification skill generation and maintenance, formal verification, TLA+ statecharts, benchmark review, worktree audits, plan checks, GitHub PR watching, review triage, and stack shipping.
-- Bundled references, guide pages, examples, scripts, and executable permissions.
-
-The adapter is [integration/harness.md](integration/harness.md). Every installed skill and agent points to it. It takes precedence over upstream tool names and model-selection instructions; the engineering procedures remain upstream's. This follows the mapping approach used by pstack's own [Claude Code adapter](https://github.com/cursor/plugins/blob/fd268b808c786469e6dd8c8d9db864d0de4d669e/pstack/docs/harness/claude-code.md).
-
-| Cursor dependency | Adaptation |
-| --- | --- |
-| `Task`, `AskQuestion`, todos, file tools | Actual host tools and accepted schemas. |
-| Task-specific models and effort slugs | Named agents with `provider/model` and optional `variant`. |
-| Cursor model rules | `pstack/models.json` and generated role agents. |
-| Custom Modes | The `pstack` primary agent. |
-| Cloud agents | Local task agents; separate writers require real cwd isolation or serialized work. |
-| `/loop`, scheduled wakeups, fleet orchestration | Active-session progress; persistent scheduling requires host support. |
-| Cursor transcript paths | Explicit session exports scoped to the current workspace. |
-| PR tooling and Bugbot | Forge CLI and normal review threads; no Cursor bot setup or required bot runs. |
-| `create-skill`, `deslop`, `control-ui`, `control-cli` | Agent Skills authoring, direct diff review, and available app drivers. |
-| Automations, routines, secret-request cards, `make-bot-ui` | Excluded. |
-
-Background execution, durable wakeups, cloud machines, and multi-model diversity depend on the host's capabilities. The installer cannot provide them through prompts alone. Missing live drivers or history are reported as gaps in proof. Connected MCP providers, credentials, and GitHub access are configured separately.
+- **Cursor-only features:** Automations, routines, webhook wakes, secret-request cards, `make-bot-ui`, and automation bot templates are excluded. Bugbot setup and required bot runs are replaced by ordinary PR review.
+- **Cloud and background execution:** workers run locally. Durable scheduling, remote machines, and work after the CLI exits require separate host support.
+- **Cursor model rules and Custom Modes:** role models are configured locally, and the **pstack** primary agent provides persistent mode.
+- **History and external tools:** transcript-based workflows need explicit session exports. MCP providers, credentials, GitHub access, and app drivers must be configured separately.
 
 ## Models
 
-By default every role inherits the session model. Panel workflows keep two independent seats, but independent runs on the same model do not provide model diversity. Arena's cross-family judge is skipped unless a different family is configured.
+**Model setup is 100% optional.** If you skip it, workflows use your current session model for every role, with no role-specific model or reasoning overrides. Panels still run independent agents on that same model, so they provide no model diversity, and Arena's cross-family judge is skipped.
 
-Run `/pstack-setup-pstack`, or copy [examples/models.json](examples/models.json) and edit it. A role accepts a model string or an object with a model and provider-supported reasoning variant. Panels accept lists. For example, after replacing these placeholders with IDs your CLI lists:
+Run `/pstack-setup-pstack` only if you want to customize those defaults. It discovers the models available in your CLI, helps you choose a reasoning budget and models for each role, and checks model IDs and supported reasoning variants. It then updates `pstack/models.json`, the role agents, and the adapter's role table using the installed configure script. It needs no checkout or download. Restart the CLI afterward to load the changes.
 
-```json
-{
-  "roles": {
-    "how explorer": "provider/model-a",
-    "architect runners": [
-      { "model": "provider/model-a", "variant": "high" },
-      "other-provider/model-b"
-    ]
-  }
-}
-```
+Choose models around the work you expect to do:
+
+- **Task difficulty:** use stronger reasoning for architecture, difficult implementation, and adversarial review; use faster, cheaper models for routine exploration and straightforward edits.
+- **Cost and latency:** panel workflows run multiple agents, so both model choice and seat count affect spend. Setup offers small, medium, large, and unlimited reasoning budgets, targeting medium, high, xhigh, and max reasoning respectively, where the provider supports them.
+- **Independent perspectives:** choose different model families for Arena, Architect, and Interrogate panels when available. Two runs on the same model provide independent attempts, but no model diversity. Arena's cross-family judge is skipped unless a different family is configured.
+- **Availability:** choose models your organization enables and reasoning variants your provider supports. Tabnine IDs use `tabnine/<key>`; inspect choices with `tabnine models` or `opencode models` for standalone OpenCode.
+
+For manual configuration, copy [examples/models.json](examples/models.json) to a separate input file, edit the role choices, then run:
 
 ```sh
 python3 integrate.py configure --models /path/to/my-models.json
 ```
 
-Use a separate input file so conflict detection can protect the installed `pstack/models.json`. Omitted roles inherit the session model. Tabnine model IDs use `tabnine/<key>`; run `tabnine models` to find organization-enabled choices. The script validates configuration shape; model entitlement and supported variants must be checked with the CLI's model list and provider config. Restart the host after changes. Setup ships a local copy of the configure script, so configuring an installed integration needs neither this checkout nor a download.
+Roles accept a `provider/model` string or an object such as `{"model": "provider/model", "variant": "high"}`. Panels accept lists; omitted roles inherit the session model. The script validates the file's structure, so check model access and supported variants in your CLI before applying it. Restart afterward.
 
 ## Updates, local sources, and removal
 
-[upstream.lock.json](upstream.lock.json) pins pstack **0.15.36**, its commit, and the archive's SHA-256. Installation verifies the archive before reading its files. Re-running installation uses the same version and is idempotent. To upgrade upstream, audit the new capabilities and harness dependencies, then update the commit, version, checksum, and inventory together. Installation never follows a moving `main` branch.
+[upstream.lock.json](upstream.lock.json) pins pstack **0.15.36**, its commit, and archive checksum. Re-running installation keeps that version. Upgrades require updating the lock and inventory after auditing upstream changes.
 
-For an offline or modified source tree:
+To install from an offline or modified source tree with the expected skill inventory:
 
 ```sh
 python3 integrate.py install --source /path/to/cursor-plugins/pstack
 ```
 
-Local sources must have the expected skill inventory. The manifest records a local source as unverified rather than claiming it matches the pinned archive. Keep pstack's upstream MIT license, which is installed at `pstack/LICENSE`.
+Check installed files or remove the integration with:
 
 ```sh
 python3 integrate.py doctor
@@ -120,24 +86,6 @@ python3 integrate.py uninstall --dry-run
 python3 integrate.py uninstall
 ```
 
-The manifest tracks installed files by hash. Install and uninstall refuse conflicting user files and local edits before changing anything. `--force` saves conflicts under `pstack-backups/<timestamp>/` before replacing or removing them. Uninstall preserves unrelated files and backups; it may leave empty directories. Model configuration preserves unrelated skill edits, which `doctor` continues to report. `doctor` checks file integrity and reports optional executables; it does not claim that credentials or a live workflow are working.
+Install and uninstall protect local edits and unrelated files. Use `--force` to back up conflicting files under `pstack-backups/<timestamp>/` before replacing or removing them. `doctor` checks file integrity and optional executables; it does not verify credentials or live workflows.
 
-Optional workflow dependencies include Git, `gh`, `jq`, and `rg`. The PR watcher uses Bun and installs its locked dependencies on first invocation. The statechart helper supports modern Node, Bun, or Deno and requires Java/TLC for model checking; see its bundled skill for exact versions. Video summaries need a suitable rendering/encoding tool. The installer itself uses only Python's standard library and does not install these tools.
-
-## Development
-
-```sh
-python3 -m unittest discover -s tests -v
-```
-
-Tests cover installation, resource paths, executable scripts, checksum and path validation, model configuration, conflict backups, idempotence, and safe removal. If OpenCode is installed, a discovery test checks generated commands, skills, and agents through the real CLI without making a model request.
-
-To repeat the official Tabnine discovery test on macOS:
-
-```sh
-python3 scripts/smoke_tabnine.py --report /tmp/tabnine-smoke-test.json
-```
-
-The smoke runner downloads a checksum-pinned official installer, stages the pinned pstack source, and runs the installer and CLI diagnostics in a disposable home under macOS `sandbox-exec`. Network and real-home reads are denied for child processes; writes are limited to the sandbox and native `mktemp` files. Login and shell-profile changes are disabled. The Tabnine plugin stays enabled. No prompt or model request runs. The sandbox is removed afterward; use `--keep` to retain the installation and raw logs, or `--installer /path/to/official.run` to reuse the pinned download.
-
-The upstream capability audit and primary-source references live in [docs/research.md](docs/research.md).
+Workflow helpers may need additional tools: Git, `gh`, `jq`, `rg`, Bash, Bun for PR watching, or Java/TLC for model checking. See each bundled skill for its requirements; the installer does not install these dependencies.
