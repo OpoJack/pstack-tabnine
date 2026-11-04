@@ -409,7 +409,7 @@ def main(argv=None):
             raise ValueError(f"No managed pstack installation in {config_dir}")
         missing = [name for name in old["files"] if not safe_path(config_dir, name).is_file()]
         changed = [name for name, expected in old["files"].items() if name not in missing and digest(safe_path(config_dir, name).read_bytes()) != expected]
-        print(json.dumps({"config_dir": str(config_dir), "source": old["source"], "skills": len(old["skills"]), "missing": missing, "changed": changed, "executables": {name: shutil.which(name) for name in ("tabnine", "opencode", "git", "gh", "bun", "node", "java", "jq", "rg")}}, indent=2))
+        print(json.dumps({"config_dir": str(config_dir), "source": old["source"], "skills": len(old["skills"]), "missing": missing, "changed": changed, "executables": {name: shutil.which(name) for name in ("tabnine", "git", "gh", "bun", "node", "java", "jq", "rg")}}, indent=2))
         return 1 if missing or changed else 0
     if args.action == "uninstall":
         if not old:

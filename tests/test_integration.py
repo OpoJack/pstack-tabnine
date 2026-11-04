@@ -218,14 +218,14 @@ class IntegrationTests(unittest.TestCase):
         self.assertTrue((self.base / ".tabnine/opencode/config/pstack/manifest.json").exists())
         self.assertTrue((self.base / "xdg/opencode/pstack/manifest.json").exists())
 
-    @unittest.skipUnless(shutil.which("opencode"), "OpenCode CLI not installed")
-    def test_real_opencode_discovers_generated_commands_skills_and_agents(self):
+    @unittest.skipUnless(shutil.which("tabnine"), "Tabnine CLI not installed")
+    def test_real_tabnine_discovers_generated_commands_skills_and_agents(self):
         self.run_cli()
         env = {**os.environ, "OPENCODE_CONFIG_DIR": str(self.config)}
         for command in (["debug", "config"], ["debug", "skill"], ["debug", "agent", "pstack"]):
             # Some Bun CLI versions exit before fully flushing a large piped stdout.
             with tempfile.TemporaryFile(mode="w+", encoding="utf-8") as output:
-                result = subprocess.run(["opencode", "--pure", *command], env=env, stdout=output, stderr=subprocess.PIPE, encoding="utf-8", timeout=30)
+                result = subprocess.run(["tabnine", *command], env=env, stdout=output, stderr=subprocess.PIPE, encoding="utf-8", timeout=30)
                 self.assertEqual(result.returncode, 0, result.stderr)
                 output.seek(0)
                 data = json.load(output)

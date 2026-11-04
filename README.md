@@ -62,7 +62,7 @@ Choose models around the work you expect to do:
 - **Task difficulty:** use stronger reasoning for architecture, difficult implementation, and adversarial review; use faster, cheaper models for routine exploration and straightforward edits.
 - **Cost and latency:** panel workflows run multiple agents, so both model choice and seat count affect spend. Setup offers small, medium, large, and unlimited reasoning budgets, targeting medium, high, xhigh, and max reasoning respectively, where the provider supports them.
 - **Independent perspectives:** choose different model families for Arena, Architect, and Interrogate panels when available. Two runs on the same model provide independent attempts, but no model diversity. Arena's cross-family judge is skipped unless a different family is configured.
-- **Availability:** choose models your organization enables and reasoning variants your provider supports. Tabnine IDs use `tabnine/<key>`; inspect choices with `tabnine models` or `opencode models` for standalone OpenCode.
+- **Availability:** choose models your organization enables and reasoning variants your provider supports. Tabnine IDs use `tabnine/<key>`; inspect choices with `tabnine models`.
 
 For manual configuration, copy [examples/models.json](examples/models.json) to a separate input file, edit the role choices, then run:
 

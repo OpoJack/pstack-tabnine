@@ -2,6 +2,8 @@
 
 Read this adapter before following any pstack skill or reference. Its mappings replace upstream harness-specific instructions. The engineering steps, evidence requirements, and permission gates in the skills still apply. The host's instructions and actual tool schemas take priority.
 
+Invoke the host CLI as `tabnine`.
+
 The installation root is `@@CONFIG_DIR@@`. The local pstack reference root is `@@CONFIG_DIR@@/pstack`. Full skills and their resources live at `@@CONFIG_DIR@@/pstack/skills/<name>/SKILL.md`. Native discovery entries are named `pstack-<name>` under `@@CONFIG_DIR@@/skills/` and point to those full skills. Resolve a full skill's relative paths from its directory, including `scripts/`, `references/`, and `playbooks/`. The namespace avoids shadowing unrelated skills with names such as `how` or `tdd`.
 
 ## Tools and agents
@@ -56,7 +58,7 @@ Use Windows-compatible tools for process, performance, and disk inspection. Skip
 
 ## History and excluded features
 
-For `recall`, `reflect`, `correct`, `automate-me`, session pickup, and transcript-based evals, export the relevant session using the host's supported export command, for example `opencode export <session-id>`, or use a transcript file the user provides. Verify the session belongs to the active workspace before reading it. Tabnine may use a different export command; inspect its help. Exported history may be JSON rather than JSONL. Never infer an internal database path or scan unrelated projects. If history is unavailable, name the evidence gap and use the current conversation and live repository state. Do not claim that a transcript-dependent audit passed.
+For `recall`, `reflect`, `correct`, `automate-me`, session pickup, and transcript-based evals, export the relevant session using the host's supported export command, for example `tabnine export <session-id>`, or use a transcript file the user provides. Verify the session belongs to the active workspace before reading it. Inspect `tabnine export --help` for supported options. Exported history may be JSON rather than JSONL. Never infer an internal database path or scan unrelated projects. If history is unavailable, name the evidence gap and use the current conversation and live repository state. Do not claim that a transcript-dependent audit passed.
 
 The worktree audit helper scans history only when `PSTACK_TRANSCRIPTS_DIR` names an explicitly scoped directory of exported transcripts. With no export directory, chat recency is unknown; inspect live sessions separately before deleting any worktree.
 

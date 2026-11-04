@@ -100,7 +100,6 @@ def smoke(sandbox, installer, arch):
     run("install-official-tabnine", ["/bin/bash", sandbox / "installer/install-tabnine.sh", "--no-login", "--no-modify-path", "--host", "https://sandbox.invalid"])
     launcher = home / ".local/bin/tabnine"
     tabnine_version = run("tabnine-version", [launcher, "--version"]).strip()
-    opencode_version = run("bundled-opencode-version", [home / ".tabnine/opencode/bin/opencode", "--version"]).strip()
     config_dir = home / ".tabnine/opencode/config"
     host_config = {name: (config_dir / name).read_bytes() for name in ("opencode.json", "tui.json")}
     install = [sys.executable, source / "integrate.py", "install", "--source", sandbox / "upstream/pstack"]
@@ -146,7 +145,6 @@ def smoke(sandbox, installer, arch):
         "platform": f"darwin-{arch}",
         "installer_sha256": CHECKSUMS[arch],
         "tabnine_version": tabnine_version,
-        "bundled_opencode_version": opencode_version,
         "pstack_version": lock["version"],
         "pstack_commit": lock["commit"],
         "upstream_archive_verified": provenance["verified_archive"],
