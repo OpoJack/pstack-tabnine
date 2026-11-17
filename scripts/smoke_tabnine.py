@@ -122,7 +122,7 @@ def smoke(sandbox, installer, arch):
     require(config["plugin"] == [[f"file://{home}/.tabnine/opencode/plugin", {"host": "https://sandbox.invalid"}]], "Official Tabnine plugin is not enabled")
     mode = config["command"]["pstack-poteto-mode"]
     require(mode["agent"] == "poteto" and mode["subtask"] is False, "poteto-mode does not select the primary coordinator")
-    for name, expected_mode in (("poteto", "primary"), ("pstack-poteto-agent", "subagent"), ("pstack-how-explorer-1", "subagent")):
+    for name, expected_mode in (("poteto", "primary"), ("pstack-poteto-agent", "subagent"), ("pstack-swarm-workers-1", "subagent")):
         agent = json.loads(run(f"resolve-{name}", [launcher, "debug", "agent", name]))
         require(agent["mode"] == expected_mode, f"Incorrect agent mode for {name}")
         require(str(config_dir / "pstack/harness.md") in agent["prompt"], f"Missing adapter in {name}")

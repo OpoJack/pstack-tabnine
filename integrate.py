@@ -19,13 +19,16 @@ from urllib.request import urlopen
 
 ROOT = Path(__file__).resolve().parent
 MANIFEST = "pstack/manifest.json"
-PANELS = {"arena runners", "arena cross-judge pool", "architect runners", "interrogate reviewers"}
+PANELS = {"arena runners", "arena cross-judge pool", "interrogate reviewers"}
+RETIRED_ROLES = {
+    "hardest tasks", "how explorer", "how explainer", "why investigators",
+    "why synthesizer", "reflect tooling", "reflect judgment, divergent, synthesizer",
+    "architect runners",
+}
 ROLES = (
     "feature, refactoring", "bug-fix", "perf-issue", "hillclimb",
-    "judgment and prose", "hardest tasks", "how explorer", "how explainer",
-    "why investigators", "why synthesizer", "reflect tooling",
-    "reflect judgment, divergent, synthesizer", "arena runners",
-    "arena cross-judge pool", "swarm workers", "architect runners", "interrogate reviewers",
+    "judgment and prose", "arena runners", "arena cross-judge pool",
+    "swarm workers", "interrogate reviewers",
 )
 
 
@@ -117,8 +120,11 @@ def normalize_models(value):
     if not isinstance(value, dict) or set(value) - {"roles"}:
         raise ValueError("Model config must be an object containing only 'roles'")
     roles = value.get("roles", {})
-    if not isinstance(roles, dict) or set(roles) - set(ROLES):
+    if not isinstance(roles, dict) or set(roles) - set(ROLES) - RETIRED_ROLES:
         raise ValueError("Unknown role in model config; see the generated models.json")
+    retired = set(roles) & RETIRED_ROLES
+    if retired:
+        print("Dropping retired pstack roles: " + "; ".join(sorted(retired)), file=sys.stderr)
     result = {}
     for role in ROLES:
         seats = roles.get(role, ["inherit-parent"] * (2 if role in PANELS else 1))
@@ -195,6 +201,11 @@ def adapt_text(text, relative, config_dir, client, skill_names=()):
                             "1. Install with `python3 integrate.py install` from the pstack-tabnine checkout, then restart the host.")
         text = re.sub(r"^pstack is built for Cursor,.*?$", "This installation supports Tabnine CLI and OpenCode through the local harness adapter. Human commands use the `/pstack-` prefix; models are configured through named role agents.", text, flags=re.M)
         text = re.sub(r"^Other tools can read the skills,.*?$", "Durable wakeups and remote machines require a separately configured host capability. The adapter records the available replacements and evidence gaps.", text, flags=re.M)
+        text = text.replace("and mention once that a Custom Mode keeps it on.",
+                            "and mention once that selecting the `poteto` primary agent keeps it on.")
+        text = text.replace("so every role uses its default model.", "so every role inherits the session model.")
+        text = text.replace("every role keeps its default model until they run `/setup-pstack`.",
+                            "every role inherits the session model until they run `/setup-pstack`.")
         text = re.sub(r"Whether `/poteto-mode` stays on.*?(?=\n## Pick a skill)",
                       "Select the `poteto` primary agent for a persistent engineering workflow. `/pstack-poteto-mode` explicitly selects that coordinator. Other commands use the current primary agent. There is no Cursor Custom Modes keybinding in this integration.\n", text, flags=re.S)
     text = re.sub(r"^\|[^\n]*make-bot-ui[^\n]*\n", "", text, flags=re.M)

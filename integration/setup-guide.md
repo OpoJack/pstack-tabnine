@@ -10,7 +10,7 @@ Run `/pstack-setup-pstack`. It discovers the host's available models, asks for a
 
 Defaults inherit the session model. `auto` and `inherit-parent` mean the same thing. Panel lists set the number of independent seats; two seats on one model do not provide model diversity. The Arena cross-judge pool selects one eligible judge from another model family. Tabnine's `tabnine/` provider prefix is shared across model families.
 
-The budget choices are unlimited (target max), large (target xhigh), medium (target high), and small (target medium). Use only variants the chosen provider actually offers. To spend less, choose cheaper models, reduce panel seats, or reserve poteto-mode for tasks that need rigorous design and review.
+The budget choices are large (target xhigh), medium (target high), and small (target medium). Use only variants the chosen provider actually offers. To spend less, choose cheaper models, reduce panel seats, or reserve poteto-mode for tasks that need rigorous design and review.
 
 ## Add verification
 

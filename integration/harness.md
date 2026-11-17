@@ -21,6 +21,8 @@ The installation root is `@@CONFIG_DIR@@`. The local pstack reference root is `@
 
 Select a model by choosing the named agent from the role table below as `subagent_type`. The task tool does not accept Cursor's per-call `model`, `readonly`, `run_in_background`, `environment`, `cloud_base_branch`, or `file_attachments` fields. Put file paths, branch, output directory, scope, and read-only constraints in the prompt. Omit unsupported fields. For a fresh task omit `task_id`; a supported resume uses the returned task ID. Execute independent tasks concurrently only when the host supports it. Otherwise run them sequentially and retain independent briefs and output directories. Report that limitation.
 
+Start every agent brief with `Read @@CONFIG_DIR@@/pstack/skills/poteto-mode/worker.md before anything else.` Follow the worker's operator rules under this adapter and the host's permissions.
+
 A named reviewer agent is general-purpose and can edit files. Give review-only briefs explicit read-only scope and inspect `git status` afterward. Use built-in `explore` for code-only read-only exploration when appropriate. Avoid granting additional permissions in host config merely to run a workflow.
 
 Task agents share the host's working directory. For competing writers, prepare distinct worktrees using the host's isolation feature if available. A worktree path in a prompt alone does not bind the task's tools to that directory. If the host cannot bind a worker's cwd, run a separate CLI process in the worktree, or serialize writers and review each diff. Never claim worktree isolation while workers share a checkout.
@@ -29,7 +31,7 @@ Task agents share the host's working directory. For competing writers, prepare d
 
 Start local work with the host CLI, Git, and Python 3.10+. Check extra executables only when the selected workflow reaches a step that uses them. Prefer the host's read/search tools or `git grep` for repository exploration and Python's standard library for JSON processing when they provide equivalent results. Git Bash supplies Bash and common Unix utilities on Windows; `gh`, `jq`, and `rg` are separate tools whose availability must be checked.
 
-PR operations need an authenticated forge CLI or an available equivalent integration. The bundled PR watcher specifically needs Bun and `gh`; the multi-phase plan validator needs Node; Statechart needs a supported JavaScript runtime and its Java/TLC toolchain. Run helpers with their actual dependencies. If an equivalent cannot preserve a required check, report that step's missing dependency and continue independent work. Claim verification only from checks that ran. Missing optional executables in `doctor` are informational; its exit status checks managed-file integrity.
+PR operations need an authenticated forge CLI or an available equivalent integration. The bundled PR watcher specifically needs Bun and `gh`; Statechart needs a supported JavaScript runtime and its Java/TLC toolchain. Run helpers with their actual dependencies. If an equivalent cannot preserve a required check, report that step's missing dependency and continue independent work. Claim verification only from checks that ran. Missing optional executables in `doctor` are informational; its exit status checks managed-file integrity.
 
 ## Windows execution
 
@@ -42,6 +44,8 @@ Use Windows-compatible tools for process, performance, and disk inspection. Skip
 ## Models
 
 `@@CONFIG_DIR@@/pstack/models.json` owns role choices. The generated agent files implement them. Read this table instead of upstream model-rule lines, fallback slugs, or effort ladders. Default agents inherit the session model. Two independent seats on one model are not a multi-model review. Report reduced diversity; skip Arena's cross-family judge unless its configured model family differs from the parent's. Determine family from actual model identity, such as Claude or GPT; all Tabnine models share the `tabnine/` provider prefix. The cross-judge pool is an ordered choice for one judge, not a fan-out panel. A rejected configured model is a visible configuration error: fix the role choice with the user instead of silently substituting a vendor model. Only use variants the configured provider actually supports.
+
+The role table contains the active upstream roles. How uses the session model for its single explorer/explainer; Why and Reflect run in the coordinator. Architect routes contested designs to Arena. Reinstallation drops retired role entries and their managed agent files while preserving choices for active roles.
 
 @@ROLE_TABLE@@
 

@@ -1,13 +1,12 @@
 {
-  "tested_at": "2026-11-04T02:22:50.453576+00:00",
+  "tested_at": "2026-11-17T00:08:29.979909+00:00",
   "release": "tabnine-v1.2.0",
   "release_url": "https://github.com/codota/tabnine-opencode-public/releases/tag/tabnine-v1.2.0",
   "platform": "darwin-arm64",
   "installer_sha256": "c2de207eb31f5949bd5c4b045be08e65f83faa1c7ad68c07f06fbecedeb7b98e",
   "tabnine_version": "tabnine 1.2.0",
-  "bundled_opencode_version": "1.19.5",
-  "pstack_version": "0.15.36",
-  "pstack_commit": "fd268b808c786469e6dd8c8d9db864d0de4d669e",
+  "pstack_version": "0.15.43",
+  "pstack_commit": "2f87c854fe3e2fcda44ca86b46ede35aad3c46b7",
   "upstream_archive_verified": true,
   "network_blocked_during_child_processes": true,
   "real_home_reads_blocked": true,
@@ -133,9 +132,7 @@
     "pstack-why"
   ],
   "agents": [
-    "pstack",
-    "pstack-architect-runners-1",
-    "pstack-architect-runners-2",
+    "poteto",
     "pstack-arena-cross-judge-pool-1",
     "pstack-arena-cross-judge-pool-2",
     "pstack-arena-runners-1",
@@ -143,20 +140,13 @@
     "pstack-bug-fix-1",
     "pstack-comment-sicko",
     "pstack-feature-refactoring-1",
-    "pstack-hardest-tasks-1",
     "pstack-hillclimb-1",
-    "pstack-how-explainer-1",
-    "pstack-how-explorer-1",
     "pstack-interrogate-reviewers-1",
     "pstack-interrogate-reviewers-2",
     "pstack-judgment-and-prose-1",
     "pstack-perf-issue-1",
     "pstack-poteto-agent",
-    "pstack-reflect-judgment-divergent-synthesizer-1",
-    "pstack-reflect-tooling-1",
-    "pstack-swarm-workers-1",
-    "pstack-why-investigators-1",
-    "pstack-why-synthesizer-1"
+    "pstack-swarm-workers-1"
   ],
   "checks": [
     {
@@ -169,10 +159,6 @@
     },
     {
       "check": "tabnine-version",
-      "exit_code": 0
-    },
-    {
-      "check": "bundled-opencode-version",
       "exit_code": 0
     },
     {
@@ -192,7 +178,7 @@
       "exit_code": 0
     },
     {
-      "check": "resolve-pstack",
+      "check": "resolve-poteto",
       "exit_code": 0
     },
     {
@@ -200,7 +186,7 @@
       "exit_code": 0
     },
     {
-      "check": "resolve-pstack-how-explorer-1",
+      "check": "resolve-pstack-swarm-workers-1",
       "exit_code": 0
     },
     {

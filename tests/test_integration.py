@@ -95,7 +95,7 @@ class IntegrationTests(unittest.TestCase):
         adapted = integration.adapt_text("[How](../../skills/how/SKILL.md)", "docs/guide/README.md", windows, "tabnine")
         self.assertEqual(adapted, f"[How](<{windows.as_posix()}/pstack/skills/how/SKILL.md>)")
         files = integration.role_artifacts(integration.normalize_models({}), windows)
-        agent = files["agents/pstack-how-explorer-1.md"][0].decode("utf-8")
+        agent = files["agents/pstack-swarm-workers-1.md"][0].decode("utf-8")
         self.assertIn(f"{windows.as_posix()}/pstack/skills/poteto-mode/SKILL.md", agent)
         self.assertNotIn("\\", agent)
 
@@ -162,7 +162,7 @@ class IntegrationTests(unittest.TestCase):
     def test_configure_models_updates_seats_and_installed_configure_works(self):
         self.run_cli()
         choices = self.base / "models.json"
-        choices.write_text(json.dumps({"roles": {"arena runners": [{"model": "provider/model-a", "variant": "high"}], "how explorer": "other/model-b"}}), encoding="utf-8")
+        choices.write_text(json.dumps({"roles": {"arena runners": [{"model": "provider/model-a", "variant": "high"}], "swarm workers": "other/model-b"}}), encoding="utf-8")
         script = self.config / "pstack/integration/integrate.py"
         result = subprocess.run([sys.executable, str(script), "configure", "--config-dir", str(self.config), "--models", str(choices)], capture_output=True, encoding="utf-8")
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -187,11 +187,46 @@ class IntegrationTests(unittest.TestCase):
         self.run_cli()
         choices = self.base / "models.json"
         before = self.snapshot()
-        for config in ({"roles": {"unknown": "inherit-parent"}}, {"roles": {"how explorer": "cursor-model-slug"}}, {"roles": {"arena runners": []}}, {"roles": {"how explorer": {"model": "inherit-parent", "variant": "high"}}}):
+        for config in ({"roles": {"unknown": "inherit-parent"}}, {"roles": {"swarm workers": "cursor-model-slug"}}, {"roles": {"arena runners": []}}, {"roles": {"swarm workers": {"model": "inherit-parent", "variant": "high"}}}):
             choices.write_text(json.dumps(config), encoding="utf-8")
             with self.assertRaises(ValueError):
                 self.run_cli("configure", "--models", choices)
             self.assertEqual(before, self.snapshot())
+
+    def test_upgrade_retires_roles_and_files_but_preserves_active_models(self):
+        self.run_cli()
+        models = integration.read_json(self.config / "pstack/models.json")
+        models["roles"]["swarm workers"] = [{"model": "provider/custom", "variant": "high"}]
+        for role in integration.RETIRED_ROLES:
+            models["roles"][role] = [{"model": "provider/retired"}]
+        obsolete = {
+            "agents/pstack-hardest-tasks-1.md": b"Retired role\n",
+            "pstack/skills/poteto-mode/playbooks/orchestrate.md": b"Old playbook\n",
+            "pstack/skills/poteto-mode/scripts/check-plan.mjs": b"Old validator\n",
+        }
+        manifest = integration.load_manifest(self.config)
+        for name, data in obsolete.items():
+            integration.atomic_write(self.config / name, data, 0o644)
+            manifest["files"][name] = integration.digest(data)
+        data = integration.json_bytes(models)
+        (self.config / "pstack/models.json").write_bytes(data)
+        manifest["files"]["pstack/models.json"] = integration.digest(data)
+        (self.config / "pstack/manifest.json").write_bytes(integration.json_bytes(manifest))
+        unrelated = self.config / "opencode.json"
+        unrelated.write_text('{"model":"provider/session"}\n', encoding="utf-8")
+
+        self.run_cli()
+
+        installed = integration.read_json(self.config / "pstack/models.json")
+        self.assertEqual(set(installed["roles"]), set(integration.ROLES))
+        self.assertEqual(installed["roles"]["swarm workers"], models["roles"]["swarm workers"])
+        agent = (self.config / "agents/pstack-swarm-workers-1.md").read_text(encoding="utf-8")
+        self.assertIn('model: "provider/custom"', agent)
+        self.assertIn('variant: "high"', agent)
+        for name in obsolete:
+            self.assertFalse((self.config / name).exists(), name)
+        self.assertEqual(unrelated.read_text(encoding="utf-8"), '{"model":"provider/session"}\n')
+        self.assertEqual(self.run_cli("doctor"), 0)
 
     def test_download_checksum_rejection_does_not_mutate_config(self):
         with patch.object(integration, "urlopen", return_value=io.BytesIO(b"untrusted archive")):

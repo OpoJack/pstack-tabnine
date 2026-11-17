@@ -4,7 +4,6 @@
     "judgment and prose": "inherit-parent",
     "arena runners": ["inherit-parent", "inherit-parent"],
     "arena cross-judge pool": ["inherit-parent", "inherit-parent"],
-    "architect runners": ["inherit-parent", "inherit-parent"],
     "interrogate reviewers": ["inherit-parent", "inherit-parent"]
   }
 }

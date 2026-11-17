@@ -30,7 +30,7 @@ Restart Tabnine CLI, then use:
 
 Select the **Poteto** primary agent to keep the engineering workflow active across tasks. Slash commands load a workflow for an invocation; persistent mode uses the host's agent selector.
 
-Tabnine's current [configuration documentation](https://docs.tabnine.com/main/getting-started/tabnine-plugin-for-opencode/sign-in-and-models.md) identifies `~/.tabnine/opencode/config` inside its `~/.tabnine` home. Its [migration helper](https://github.com/codota/tabnine-opencode-public/blob/2bdafbd14e36a681074b27a3eb7f1a05d2e30940/migration_helper/README.md) confirms additive OpenCode discovery of `skills/`, `commands/`, and `agents/`. Discovery has been verified with the **official Tabnine 1.2.0 installation, bundled OpenCode 1.19.5**, on macOS ARM64, with the Tabnine plugin enabled, network blocked, and no authentication or prompts. All 57 commands, 57 skills, and 24 agent definitions were accessible; see the [smoke-test report](docs/tabnine-smoke-test.md). Standalone OpenCode 1.18.10 discovery also passed. Child model routing and persistent behavior during actual conversations remain unverified. Older `tabnine-legacy` configuration is outside this integration's scope.
+Tabnine's current [configuration documentation](https://docs.tabnine.com/main/getting-started/tabnine-plugin-for-opencode/sign-in-and-models.md) identifies `~/.tabnine/opencode/config` inside its `~/.tabnine` home. Its [migration helper](https://github.com/codota/tabnine-opencode-public/blob/2bdafbd14e36a681074b27a3eb7f1a05d2e30940/migration_helper/README.md) confirms additive OpenCode discovery of `skills/`, `commands/`, and `agents/`. Discovery has been verified with the **official Tabnine 1.2.0 installation, bundled OpenCode 1.19.5**, on macOS ARM64, with the Tabnine plugin enabled, network blocked, and no authentication or prompts. The pstack 0.15.43 run found all 57 commands, 57 skills, and 15 agent definitions; see the [smoke-test report](docs/tabnine-smoke-test.md). The earlier pstack 0.15.36 integration also passed standalone OpenCode 1.18.10 discovery. Child model routing and persistent behavior during actual conversations remain unverified. Older `tabnine-legacy` configuration is outside this integration's scope.
 
 For a different config root or OpenCode:
 
@@ -60,8 +60,8 @@ Run `/pstack-setup-pstack` only if you want to customize those defaults. It disc
 Choose models around the work you expect to do:
 
 - **Task difficulty:** use stronger reasoning for architecture, difficult implementation, and adversarial review; use faster, cheaper models for routine exploration and straightforward edits.
-- **Cost and latency:** panel workflows run multiple agents, so both model choice and seat count affect spend. Setup offers small, medium, large, and unlimited reasoning budgets, targeting medium, high, xhigh, and max reasoning respectively, where the provider supports them.
-- **Independent perspectives:** choose different model families for Arena, Architect, and Interrogate panels when available. Two runs on the same model provide independent attempts, but no model diversity. Arena's cross-family judge is skipped unless a different family is configured.
+- **Cost and latency:** panel workflows run multiple agents, so both model choice and seat count affect spend. Setup offers small, medium, and large reasoning budgets, targeting medium, high, and xhigh reasoning respectively, where the provider supports them.
+- **Independent perspectives:** choose different model families for Arena and Interrogate panels when available. Architect routes contested designs to Arena. Two runs on the same model provide independent attempts, but no model diversity. Arena's cross-family judge is skipped unless a different family is configured.
 - **Availability:** choose models your organization enables and reasoning variants your provider supports. Tabnine IDs use `tabnine/<key>`; inspect choices with `tabnine models`.
 
 For manual configuration, copy [examples/models.json](examples/models.json) to a separate input file, edit the role choices, then run:
@@ -74,7 +74,15 @@ Roles accept a `provider/model` string or an object such as `{"model": "provider
 
 ## Updates, local sources, and removal
 
-[upstream.lock.json](upstream.lock.json) pins pstack **0.15.36**, its commit, and archive checksum. Re-running installation keeps that version. Upgrades require updating the lock and inventory after auditing upstream changes.
+[upstream.lock.json](upstream.lock.json) pins pstack **0.15.43**, its commit, and archive checksum. To upgrade an existing installation to this checkout's pinned version, rerun the installer:
+
+```sh
+py -3 integrate.py install --dry-run
+py -3 integrate.py install
+py -3 integrate.py doctor
+```
+
+On macOS/Linux use `python3` instead of `py -3`. Restart the CLI after installation. Active role model choices are preserved; retired roles and obsolete managed files are removed. This version installs 57 skills and 15 agent definitions with default model settings. See the [upgrade audit](docs/upgrading.md) for upstream changes and maintainer instructions. Re-running installation keeps the pinned version; there is no automatic latest-version updater.
 
 Check installed files or remove the integration with:
 
