@@ -1,4 +1,5 @@
 import contextlib
+import errno
 import importlib.util
 import io
 import json
@@ -9,6 +10,7 @@ import subprocess
 import sys
 import tarfile
 import tempfile
+import time
 import unittest
 from unittest.mock import patch
 
@@ -17,6 +19,79 @@ ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location("integrate", ROOT / "integrate.py")
 integration = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(integration)
+
+
+class AtomicWriteTests(unittest.TestCase):
+    @staticmethod
+    def windows_error(code):
+        error = PermissionError(errno.EACCES, "Access is denied")
+        error.winerror = code
+        return error
+
+    def test_windows_access_denied_during_replace_is_retried(self):
+        for code in (5, 32, 33):
+            with self.subTest(winerror=code), tempfile.TemporaryDirectory(prefix="pstack-replace-test-") as directory:
+                destination = Path(directory) / "harness.md"
+                destination.write_bytes(b"previous harness")
+                replace = os.replace
+                attempts = []
+
+                def temporarily_locked(source, target):
+                    self.assertEqual(destination.read_bytes(), b"previous harness")
+                    self.assertEqual(Path(source).read_bytes(), b"updated harness")
+                    attempts.append(source)
+                    if len(attempts) < 3:
+                        error = self.windows_error(code)
+                        error.filename = str(source)
+                        error.filename2 = str(target)
+                        raise error
+                    replace(source, target)
+
+                with patch.object(integration.os, "replace", side_effect=temporarily_locked), patch.object(time, "sleep") as sleep:
+                    integration.atomic_write(destination, b"updated harness", 0o644)
+
+                self.assertEqual(len(attempts), 3)
+                self.assertEqual([call.args[0] for call in sleep.call_args_list], [0.1, 0.2])
+                self.assertEqual(destination.read_bytes(), b"updated harness")
+                self.assertEqual(list(Path(directory).glob(".pstack-*")), [])
+
+    def test_persistent_windows_denial_preserves_destination_and_explains_recovery(self):
+        for existing in (False, True):
+            with self.subTest(existing=existing), tempfile.TemporaryDirectory(prefix="pstack-replace-test-") as directory:
+                destination = Path(directory) / "harness.md"
+                if existing:
+                    destination.write_bytes(b"previous harness")
+                error = self.windows_error(5)
+                with patch.object(integration.os, "replace", side_effect=error) as replace, patch.object(time, "sleep") as sleep:
+                    with self.assertRaisesRegex(PermissionError, "after 6 attempts") as caught:
+                        integration.atomic_write(destination, b"updated harness", 0o644)
+
+                self.assertIs(caught.exception.__cause__, error)
+                self.assertIn(str(destination), str(caught.exception))
+                self.assertIn("Close Tabnine/OpenCode", str(caught.exception))
+                self.assertIn("read-only", str(caught.exception))
+                self.assertEqual(replace.call_count, 6)
+                self.assertEqual([call.args[0] for call in sleep.call_args_list], [0.1, 0.2, 0.4, 0.8, 1.6])
+                if existing:
+                    self.assertEqual(destination.read_bytes(), b"previous harness")
+                else:
+                    self.assertFalse(destination.exists())
+                self.assertEqual(list(Path(directory).glob(".pstack-*")), [])
+
+    def test_unrelated_replace_errors_are_not_retried(self):
+        for error in (PermissionError(errno.EACCES, "POSIX permission denied"), OSError(errno.ENOSPC, "Disk full"), self.windows_error(112)):
+            with self.subTest(error=error), tempfile.TemporaryDirectory(prefix="pstack-replace-test-") as directory:
+                destination = Path(directory) / "harness.md"
+                destination.write_bytes(b"previous harness")
+                with patch.object(integration.os, "replace", side_effect=error) as replace, patch.object(time, "sleep") as sleep:
+                    with self.assertRaises(OSError) as caught:
+                        integration.atomic_write(destination, b"updated harness", 0o644)
+
+                self.assertIs(caught.exception, error)
+                replace.assert_called_once()
+                sleep.assert_not_called()
+                self.assertEqual(destination.read_bytes(), b"previous harness")
+                self.assertEqual(list(Path(directory).glob(".pstack-*")), [])
 
 
 class IntegrationTests(unittest.TestCase):
@@ -109,6 +184,28 @@ class IntegrationTests(unittest.TestCase):
         before = self.snapshot()
         self.run_cli()
         self.assertEqual(before, self.snapshot())
+
+    def test_install_recovers_from_windows_harness_replace_denial(self):
+        replace = os.replace
+        attempts = 0
+
+        def temporarily_locked(source, target):
+            nonlocal attempts
+            if target == self.config / "pstack/harness.md":
+                attempts += 1
+                if attempts == 1:
+                    raise AtomicWriteTests.windows_error(5)
+            replace(source, target)
+
+        with patch.object(integration.os, "replace", side_effect=temporarily_locked), patch.object(time, "sleep"):
+            self.assertEqual(self.run_cli(), 0)
+
+        self.assertEqual(attempts, 2)
+        self.assertEqual(self.run_cli("doctor"), 0)
+        before = self.snapshot()
+        self.run_cli()
+        self.assertEqual(before, self.snapshot())
+        self.assertEqual(list(self.config.rglob(".pstack-*")), [])
 
     def test_dry_run_leaves_no_destination(self):
         self.run_cli("install", "--dry-run")

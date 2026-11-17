@@ -13,6 +13,7 @@ import shutil
 import sys
 import tarfile
 import tempfile
+import time
 from datetime import datetime, timezone
 from urllib.request import urlopen
 
@@ -347,7 +348,23 @@ def atomic_write(path, data, mode):
             stream.write(data)
         if os.name != "nt":
             os.chmod(temporary, mode)
-        os.replace(temporary, path)
+        # Windows scanners and config watchers can briefly deny rename/delete
+        # access even after our own file handle has been closed.
+        for attempt in range(6):
+            try:
+                os.replace(temporary, path)
+                break
+            except OSError as error:
+                if getattr(error, "winerror", None) not in {5, 32, 33}:
+                    raise
+                if attempt == 5:
+                    raise PermissionError(
+                        f"Could not atomically replace {path} after 6 attempts: {error}. "
+                        "Close Tabnine/OpenCode and any editor using this config, then rerun the command. "
+                        "If it still fails, check the destination's read-only attribute and "
+                        "file/folder permissions, and whether security software is blocking replacement."
+                    ) from error
+                time.sleep(0.1 * 2 ** attempt)
     finally:
         if os.path.exists(temporary):
             os.unlink(temporary)
